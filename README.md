@@ -10,6 +10,24 @@ Three demo flows, no web UI:
 
 ---
 
+## RocketRide pipelines
+
+calendar_create_agent.pipe
+<img width="893" height="421" alt="image" src="https://github.com/user-attachments/assets/d736da37-1273-4daa-9e8c-201c9a58f226" />
+
+chain of debate implementation with 3 LLMS(prevents hallucination)
+<img width="905" height="688" alt="image" src="https://github.com/user-attachments/assets/54dbcbac-9e2c-4c1e-8edd-b9b63cbca549" />
+
+slack to Jira pipeline
+<img width="888" height="506" alt="image" src="https://github.com/user-attachments/assets/589a7577-51e5-4edd-8c26-610311a994cf" />
+
+RAG pipeline with slack and Jira tickets(query the ticket and message history)
+<img width="882" height="172" alt="image" src="https://github.com/user-attachments/assets/5b26cca2-2845-4fd1-8984-59874c3e749c" />
+
+
+
+
+
 ## Project structure
 
 ```
@@ -95,15 +113,12 @@ project_RR/
 
 ## Design decisions
 
-**Slot finding stays in Python.** Walking 9-5 in 60-min steps and scoring conflicts is pure date arithmetic. RocketRide handles thinking; Python handles computation.
 
 **CoD as fan-out, not sequential.** All three agents (Proposer, Challenger, Judge) run in parallel on the same input instead of each seeing the previous one's output. This is faster and produces the visually striking Pattern 8 DAG. The Judge's top-3 ranking is used for the Slack card buttons.
 
 **HITL via Slack interactivity.** RocketRide pipelines run to completion — there's no built-in pause. The pending meeting state is held in memory between the bot posting the card and the user clicking a button. This keeps the demo about RocketRide, not plumbing.
 
 **PII scrubbed before vector storage.** `anonymize_text` runs between `parse` and `preprocessor_langchain` in the ingest pipeline. Names, emails, and phone numbers are masked before chunking and embedding.
-
-**Precomputed auth headers.** The Jira `Authorization: Basic <token>` is computed once and injected via `${ROCKETRIDE_JIRA_AUTH_HEADER}`. Google Bearer tokens are refreshed per request by `google_auth.py` and passed to the calendar pipeline via `Question.addContext()`.
 
 **Single connection, all pipelines at boot.** `rocketride_client.py` pre-starts every pipeline with `ttl=0` (no idle timeout) and auto-restarts any pipeline that has gone stale before retrying the request.
 
