@@ -1,5 +1,4 @@
 # Workforce Copilot — Multi-Agent Workplace Automation on RocketRide
-
 A Slack-native backend that connects your team's Slack workspace, Gmail inbox, Jira board, and Google Calendar through a set of RocketRide pipelines. Every "thinking" step — ticket extraction, meeting scheduling, RAG Q&A — runs inside a RocketRide pipeline. Every external action is a real API call.
 
 Three demo flows, no web UI:
@@ -9,6 +8,7 @@ Three demo flows, no web UI:
 - **Slack RAG** — ask the bot a question and it searches past Jira tickets using vector similarity
 
 ---
+## DEMO VIDEO: https://youtu.be/U5WjTXoDo74
 
 ## RocketRide pipelines
 
