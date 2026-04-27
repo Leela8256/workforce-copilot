@@ -1,0 +1,28 @@
+# RocketRide SDK
+rocketride
+
+# Slack bot (Socket Mode)
+slack-bolt
+
+# Web harness for /dev fallback form
+flask
+
+# Loads .env into os.environ for app.py
+python-dotenv
+
+# HTTP client for verification scripts
+requests
+
+# Data validation for structured pipeline outputs
+pydantic
+
+# Google OAuth + API clients (Gmail + Calendar)
+google-auth
+google-auth-oauthlib
+google-api-python-client
+
+# Vector DB client for RAG pipelines
+qdrant-client
+
+# Date parsing for slot finder
+python-dateutil

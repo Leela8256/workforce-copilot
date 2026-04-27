@@ -1,0 +1,156 @@
+{
+  "components": [
+    {
+      "id": "webhook_1",
+      "provider": "webhook",
+      "config": {
+        "hideForm": true,
+        "mode": "Source",
+        "parameters": {},
+        "type": "webhook"
+      },
+      "ui": {
+        "position": {
+          "x": 20,
+          "y": 200
+        },
+        "measured": {
+          "width": 150,
+          "height": 66
+        }
+      }
+    },
+    {
+      "id": "parse_1",
+      "provider": "parse",
+      "config": {},
+      "input": [
+        {
+          "lane": "tags",
+          "from": "webhook_1"
+        }
+      ],
+      "ui": {
+        "position": {
+          "x": 240,
+          "y": 200
+        },
+        "measured": {
+          "width": 150,
+          "height": 66
+        }
+      }
+    },
+    {
+      "id": "anonymize_1",
+      "provider": "anonymize_text",
+      "config": {
+        "parameters": {}
+      },
+      "input": [
+        {
+          "lane": "text",
+          "from": "parse_1"
+        }
+      ],
+      "ui": {
+        "position": {
+          "x": 460,
+          "y": 200
+        },
+        "measured": {
+          "width": 150,
+          "height": 66
+        }
+      }
+    },
+    {
+      "id": "preprocessor_1",
+      "provider": "preprocessor_langchain",
+      "config": {
+        "profile": "default",
+        "parameters": {}
+      },
+      "input": [
+        {
+          "lane": "text",
+          "from": "anonymize_1"
+        }
+      ],
+      "ui": {
+        "position": {
+          "x": 680,
+          "y": 200
+        },
+        "measured": {
+          "width": 150,
+          "height": 66
+        }
+      }
+    },
+    {
+      "id": "embedding_1",
+      "provider": "embedding_openai",
+      "config": {
+        "profile": "text-embedding-3-small",
+        "text-embedding-3-small": {
+          "apikey": "${ROCKETRIDE_OPENAI_KEY}"
+        },
+        "parameters": {}
+      },
+      "input": [
+        {
+          "lane": "documents",
+          "from": "preprocessor_1"
+        }
+      ],
+      "ui": {
+        "position": {
+          "x": 900,
+          "y": 200
+        },
+        "measured": {
+          "width": 150,
+          "height": 66
+        }
+      }
+    },
+    {
+      "id": "qdrant_1",
+      "provider": "qdrant",
+      "config": {
+        "profile": "local",
+        "local": {
+          "host": "localhost",
+          "port": 6333,
+          "collection": "jira_history",
+          "score": 0.5
+        },
+        "parameters": {}
+      },
+      "input": [
+        {
+          "lane": "documents",
+          "from": "embedding_1"
+        }
+      ],
+      "ui": {
+        "position": {
+          "x": 1120,
+          "y": 200
+        },
+        "measured": {
+          "width": 150,
+          "height": 135
+        }
+      }
+    }
+  ],
+  "project_id": "195e47a7-99e9-49d5-89d7-703b2652ee4a",
+  "viewport": {
+    "x": 0,
+    "y": 0,
+    "zoom": 1
+  },
+  "version": 1
+}

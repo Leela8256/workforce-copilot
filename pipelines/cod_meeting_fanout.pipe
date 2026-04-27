@@ -1,0 +1,113 @@
+{
+  "components": [
+    {
+      "id": "chat_1",
+      "provider": "chat",
+      "config": {
+        "hideForm": true,
+        "mode": "Source",
+        "parameters": {},
+        "type": "chat"
+      },
+      "ui": { "position": { "x": 20, "y": 360 }, "measured": { "width": 150, "height": 66 } }
+    },
+    {
+      "id": "agent_proposer",
+      "provider": "agent_rocketride",
+      "config": {
+        "agent_description": "Proposer — picks the single best meeting slot from candidates and argues for it.",
+        "instructions": [
+          "You are the PROPOSER in a meeting-scheduling debate. The user's question is a JSON object with: email_context (subject, sender, body, attendees, time_preference) and candidate_slots (list of {start, end, conflict_count, conflicts}).",
+          "Pick the SINGLE BEST slot from candidate_slots. Priority: 1) honour any time_preference from the email (morning/afternoon/etc.), 2) prefer slots with conflict_count=0, 3) prefer mid-morning (10-11am local), 4) avoid slots whose conflicts include URGENT events.",
+          "Reply with JSON: {\"role\":\"proposer\",\"proposed_slot\":{\"start\":\"<iso>\",\"end\":\"<iso>\"},\"argument\":\"<1-2 sentences citing email context and conflict info>\"}. Only JSON, no prose."
+        ],
+        "max_waves": 2,
+        "parameters": {}
+      },
+      "input": [{ "lane": "questions", "from": "chat_1" }],
+      "ui": { "position": { "x": 260, "y": 200 }, "measured": { "width": 150, "height": 86 } }
+    },
+    {
+      "id": "agent_challenger",
+      "provider": "agent_rocketride",
+      "config": {
+        "agent_description": "Challenger — independently picks an alternative slot, looking for blind spots.",
+        "instructions": [
+          "You are the CHALLENGER in a meeting-scheduling debate. The user's question is a JSON object with: email_context and candidate_slots (same shape as the Proposer sees).",
+          "Independently pick the slot you believe is best — disagree with mid-morning bias if context warrants. Look for: time preferences in the email body, attendee count vs. slot fit, EOD/early-morning needs, deadlines hinted at.",
+          "Reply with JSON: {\"role\":\"challenger\",\"counter_slot\":{\"start\":\"<iso>\",\"end\":\"<iso>\"},\"argument\":\"<1-2 sentences explaining why this differs from a default mid-morning pick>\"}. Only JSON, no prose."
+        ],
+        "max_waves": 2,
+        "parameters": {}
+      },
+      "input": [{ "lane": "questions", "from": "chat_1" }],
+      "ui": { "position": { "x": 260, "y": 360 }, "measured": { "width": 150, "height": 86 } }
+    },
+    {
+      "id": "agent_judge",
+      "provider": "agent_rocketride",
+      "config": {
+        "agent_description": "Judge — ranks the top 3 slots independently as a tiebreaker view.",
+        "instructions": [
+          "You are the JUDGE in a meeting-scheduling debate. The user's question is a JSON object with: email_context and candidate_slots.",
+          "Pick the TOP 3 slots ranked best to third-best. Each must come from candidate_slots (do NOT invent times). Honour any time preferences from the email body. Strongly prefer conflict_count=0; allow displaceable conflicts only if no free slot exists.",
+          "Reply with JSON: {\"role\":\"judge\",\"top_slots\":[{\"start\":\"<iso>\",\"end\":\"<iso>\",\"reason\":\"<one sentence>\"}, ...up to 3]}. Only JSON, no prose."
+        ],
+        "max_waves": 2,
+        "parameters": {}
+      },
+      "input": [{ "lane": "questions", "from": "chat_1" }],
+      "ui": { "position": { "x": 260, "y": 520 }, "measured": { "width": 150, "height": 86 } }
+    },
+    {
+      "id": "llm_shared",
+      "provider": "llm_openai",
+      "config": {
+        "profile": "openai-4o",
+        "openai-4o": { "apikey": "${ROCKETRIDE_OPENAI_KEY}" },
+        "parameters": {}
+      },
+      "control": [
+        { "classType": "llm", "from": "agent_proposer" },
+        { "classType": "llm", "from": "agent_challenger" },
+        { "classType": "llm", "from": "agent_judge" }
+      ],
+      "ui": { "position": { "x": 480, "y": 700 }, "measured": { "width": 150, "height": 66 } }
+    },
+    {
+      "id": "memory_proposer",
+      "provider": "memory_internal",
+      "config": { "type": "memory_internal" },
+      "control": [{ "classType": "memory", "from": "agent_proposer" }],
+      "ui": { "position": { "x": 480, "y": 200 }, "measured": { "width": 150, "height": 66 } }
+    },
+    {
+      "id": "memory_challenger",
+      "provider": "memory_internal",
+      "config": { "type": "memory_internal" },
+      "control": [{ "classType": "memory", "from": "agent_challenger" }],
+      "ui": { "position": { "x": 480, "y": 360 }, "measured": { "width": 150, "height": 66 } }
+    },
+    {
+      "id": "memory_judge",
+      "provider": "memory_internal",
+      "config": { "type": "memory_internal" },
+      "control": [{ "classType": "memory", "from": "agent_judge" }],
+      "ui": { "position": { "x": 480, "y": 520 }, "measured": { "width": 150, "height": 66 } }
+    },
+    {
+      "id": "response_answers_1",
+      "provider": "response_answers",
+      "config": { "laneName": "answers" },
+      "input": [
+        { "lane": "answers", "from": "agent_proposer" },
+        { "lane": "answers", "from": "agent_challenger" },
+        { "lane": "answers", "from": "agent_judge" }
+      ],
+      "ui": { "position": { "x": 720, "y": 360 }, "measured": { "width": 150, "height": 66 } }
+    }
+  ],
+  "project_id": "5f19b5fe-a146-4592-be76-39b909b3cf9c",
+  "viewport": { "x": 0, "y": 0, "zoom": 1 },
+  "version": 1
+}

@@ -1,0 +1,81 @@
+{
+  "components": [
+    {
+      "id": "chat_1",
+      "provider": "chat",
+      "config": {
+        "hideForm": true,
+        "mode": "Source",
+        "parameters": {},
+        "type": "chat"
+      },
+      "ui": { "position": { "x": 20, "y": 200 }, "measured": { "width": 150, "height": 66 } }
+    },
+    {
+      "id": "agent_1",
+      "provider": "agent_rocketride",
+      "config": {
+        "agent_description": "Workforce Copilot — creates Google Calendar events from a structured slot + email context.",
+        "instructions": [
+          "You are Workforce Copilot. The user's question is a JSON object containing: bearer_token (a Google OAuth access token), title (meeting title), start (ISO datetime), end (ISO datetime), attendees (list of emails), description (string). Your job is to create a Google Calendar event using the tool_http_request tool, then return a JSON response.",
+          "First, parse the user's question as JSON to extract bearer_token, title, start, end, attendees, description.",
+          "Invoke tool_http_request with: method=POST, url=https://www.googleapis.com/calendar/v3/calendars/primary/events?sendUpdates=all, headers={\"Authorization\":\"Bearer <bearer_token>\",\"Accept\":\"application/json\",\"Content-Type\":\"application/json\"}, body={\"summary\":\"<title>\",\"description\":\"<description>\",\"start\":{\"dateTime\":\"<start>\",\"timeZone\":\"America/Los_Angeles\"},\"end\":{\"dateTime\":\"<end>\",\"timeZone\":\"America/Los_Angeles\"},\"attendees\":[{\"email\":\"<each>\"}]}. Substitute the angle-bracket fields with actual values from the input.",
+          "On success Google returns {\"id\":\"...\", \"htmlLink\":\"https://www.google.com/calendar/event?eid=...\", ...}. Reply with JSON: {\"action\":\"created\",\"event_id\":\"<id>\",\"html_link\":\"<htmlLink>\",\"title\":\"<title>\",\"start\":\"<start>\",\"end\":\"<end>\"}.",
+          "On failure (HTTP >= 400 or no id), reply with JSON: {\"action\":\"failed\",\"error\":\"<short reason>\",\"http_status\":<status>}.",
+          "Never include the bearer_token value in your reply. Reply with a single JSON object only — no prose."
+        ],
+        "max_waves": 6,
+        "parameters": {}
+      },
+      "input": [{ "lane": "questions", "from": "chat_1" }],
+      "ui": { "position": { "x": 240, "y": 200 }, "measured": { "width": 150, "height": 86 } }
+    },
+    {
+      "id": "llm_1",
+      "provider": "llm_openai",
+      "config": {
+        "profile": "openai-4o",
+        "openai-4o": { "apikey": "${ROCKETRIDE_OPENAI_KEY}" },
+        "parameters": {}
+      },
+      "control": [{ "classType": "llm", "from": "agent_1" }],
+      "ui": { "position": { "x": 130, "y": 380 }, "measured": { "width": 150, "height": 66 } }
+    },
+    {
+      "id": "memory_1",
+      "provider": "memory_internal",
+      "config": { "type": "memory_internal" },
+      "control": [{ "classType": "memory", "from": "agent_1" }],
+      "ui": { "position": { "x": 320, "y": 380 }, "measured": { "width": 150, "height": 66 } }
+    },
+    {
+      "id": "tool_http_1",
+      "provider": "tool_http_request",
+      "config": {
+        "type": "tool_http_request",
+        "allowGET": true,
+        "allowPOST": true,
+        "allowPUT": false,
+        "allowPATCH": false,
+        "allowDELETE": false,
+        "allowHEAD": false,
+        "allowOPTIONS": false,
+        "urlWhitelist": [
+          { "whitelistPattern": "^https://www\\.googleapis\\.com/calendar/v3/.*$" }
+        ]
+      },
+      "control": [{ "classType": "tool", "from": "agent_1" }],
+      "ui": { "position": { "x": 510, "y": 380 }, "measured": { "width": 150, "height": 40 } }
+    },
+    {
+      "id": "response_answers_1",
+      "provider": "response_answers",
+      "config": { "laneName": "answers" },
+      "input": [{ "lane": "answers", "from": "agent_1" }],
+      "ui": { "position": { "x": 460, "y": 200 }, "measured": { "width": 150, "height": 66 } }
+    }
+  ],
+  "project_id": "6638fdce-56a1-4c04-97bb-3fc6e6c8efd7",
+  "viewport": { "x": 0, "y": 0, "zoom": 1 },
+  "version": 1
+}
